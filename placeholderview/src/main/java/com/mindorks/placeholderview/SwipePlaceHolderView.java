@@ -470,57 +470,6 @@ public class SwipePlaceHolderView extends FrameLayout implements
         float distXMovedAbs = distXMoved > 0 ? distXMoved : -distXMoved;
         float distYMovedAbs = distYMoved > 0 ? distYMoved : -distYMoved;
 
-        if (distXMoved >= 0 && distYMoved >= 0) {
-            // RIGHT-BOTTOM
-            if (distXMovedAbs > mSwipeOption.getSwipeHorizontalThreshold()
-                    && distYMovedAbs <= mSwipeOption.getSwipeVerticalThreshold()) {
-                swipeViewBinder.bindSwipingDirection(SwipeDirection.RIGHT);
-
-            } else if (distXMovedAbs <= mSwipeOption.getSwipeHorizontalThreshold()
-                    && distYMovedAbs > mSwipeOption.getSwipeVerticalThreshold()) {
-                swipeViewBinder.bindSwipingDirection(SwipeDirection.BOTTOM);
-            } else {
-                swipeViewBinder.bindSwipingDirection(SwipeDirection.RIGHT_BOTTOM);
-            }
-        } else if (distXMoved > 0 && distYMoved < 0) {
-            // RIGHT-TOP
-            if (distXMovedAbs > mSwipeOption.getSwipeHorizontalThreshold()
-                    && distYMovedAbs <= mSwipeOption.getSwipeVerticalThreshold()) {
-                swipeViewBinder.bindSwipingDirection(SwipeDirection.RIGHT);
-
-            } else if (distXMovedAbs <= mSwipeOption.getSwipeHorizontalThreshold()
-                    && distYMovedAbs > mSwipeOption.getSwipeVerticalThreshold()) {
-                swipeViewBinder.bindSwipingDirection(SwipeDirection.TOP);
-            } else {
-                swipeViewBinder.bindSwipingDirection(SwipeDirection.RIGHT_TOP);
-            }
-
-        } else if (distXMoved < 0 && distYMoved < 0) {
-            // LEFT-TOP
-            if (distXMovedAbs > mSwipeOption.getSwipeHorizontalThreshold()
-                    && distYMovedAbs <= mSwipeOption.getSwipeVerticalThreshold()) {
-                swipeViewBinder.bindSwipingDirection(SwipeDirection.LEFT);
-
-            } else if (distXMovedAbs <= mSwipeOption.getSwipeHorizontalThreshold()
-                    && distYMovedAbs > mSwipeOption.getSwipeVerticalThreshold()) {
-                swipeViewBinder.bindSwipingDirection(SwipeDirection.TOP);
-            } else {
-                swipeViewBinder.bindSwipingDirection(SwipeDirection.LEFT_TOP);
-            }
-        } else if (distXMoved < 0 && distYMoved > 0) {
-            // LEFT-BOTTOM
-            if (distXMovedAbs > mSwipeOption.getSwipeHorizontalThreshold()
-                    && distYMovedAbs <= mSwipeOption.getSwipeVerticalThreshold()) {
-                swipeViewBinder.bindSwipingDirection(SwipeDirection.LEFT);
-
-            } else if (distXMovedAbs <= mSwipeOption.getSwipeHorizontalThreshold()
-                    && distYMovedAbs > mSwipeOption.getSwipeVerticalThreshold()) {
-                swipeViewBinder.bindSwipingDirection(SwipeDirection.BOTTOM);
-            } else {
-                swipeViewBinder.bindSwipingDirection(SwipeDirection.LEFT_BOTTOM);
-            }
-        }
-
         if(mSwipeDecor.isAnimateScale() && mSwipeViewBinderList.contains(swipeViewBinder)
                 && distXMovedAbs <= finalXDist && distYMovedAbs <= finalYDist){
             int count;

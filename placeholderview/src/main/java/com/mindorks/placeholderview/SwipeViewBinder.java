@@ -401,7 +401,6 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
                                         && pointerCurrentPoint.y >= pointerStartingPoint.y) {
 
                                     // RIGHT-BOTTOM
-
                                     if (delX > mSwipeOption.getSwipeVerticalThreshold()
                                             && delY <= mSwipeOption.getSwipeHorizontalThreshold()) {
                                         transY = v.getTranslationY();
@@ -510,6 +509,9 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
                             int distanceMovedLeft = layoutParamsTemp.leftMargin - mOriginalLeftMargin;
                             mCallback.onAnimateView(distanceMovedLeft, distanceMovedTop, displayMetrics.widthPixels / mSwipeOption.getWidthSwipeDistFactor(),
                                     displayMetrics.heightPixels / mSwipeOption.getHeightSwipeDistFactor(), SwipeViewBinder.this);
+
+                            broadcastMoveDirection(pointerCurrentPoint.x, pointerCurrentPoint.y,
+                                    pointerStartingPoint.x, pointerStartingPoint.y);
                         }
                         break;
                 }
@@ -615,6 +617,8 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
                             int distanceMoved = layoutParamsTemp.leftMargin - mOriginalLeftMargin;
                             mCallback.onAnimateView(distanceMoved, 0, displayMetrics.widthPixels / mSwipeOption.getWidthSwipeDistFactor(),
                                     displayMetrics.heightPixels / mSwipeOption.getHeightSwipeDistFactor(), SwipeViewBinder.this);
+
+                            broadcastMoveDirection(x, 0, xStart, 0);
                         }
                         break;
                 }
@@ -721,6 +725,8 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
                             int distanceMoved = layoutParamsTemp.topMargin - mOriginalTopMargin;
                             mCallback.onAnimateView(0, distanceMoved, displayMetrics.widthPixels / mSwipeOption.getWidthSwipeDistFactor(),
                                     displayMetrics.heightPixels / mSwipeOption.getHeightSwipeDistFactor(), SwipeViewBinder.this);
+
+                            broadcastMoveDirection(0, y, 0, yStart);
                         }
                         break;
                 }
@@ -736,6 +742,80 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
                 return true;
             }
         });
+    }
+
+    private void broadcastMoveDirection(float xCurrent, float yCurrent, float xStart, float yStart) {
+
+        float delX = xCurrent - xStart;
+        float delY = yCurrent - yStart;
+
+        if (xCurrent >= xStart && yCurrent >= yStart) {
+
+            // RIGHT-BOTTOM
+            if (delX > mSwipeOption.getSwipeVerticalThreshold()
+                    && delY <= mSwipeOption.getSwipeHorizontalThreshold()) {
+                bindSwipingDirection(SwipeDirection.RIGHT);
+
+            } else if (delX <= mSwipeOption.getSwipeVerticalThreshold()
+                    && delY > mSwipeOption.getSwipeHorizontalThreshold()) {
+                bindSwipingDirection(SwipeDirection.BOTTOM);
+
+            } else {
+                bindSwipingDirection(SwipeDirection.RIGHT_BOTTOM);
+            }
+
+        } else if (xCurrent > xStart && yCurrent < yStart) {
+
+            // RIGHT-TOP
+            delY *= -1;
+
+            if (delX > mSwipeOption.getSwipeVerticalThreshold()
+                    && delY <= mSwipeOption.getSwipeHorizontalThreshold()) {
+                bindSwipeIn(getResolver(), SwipeDirection.RIGHT);
+
+            } else if (delX <= mSwipeOption.getSwipeVerticalThreshold()
+                    && delY > mSwipeOption.getSwipeHorizontalThreshold()) {
+                bindSwipingDirection(SwipeDirection.TOP);
+
+            } else {
+                bindSwipingDirection(SwipeDirection.RIGHT_TOP);
+            }
+
+        } else if (xCurrent < xStart && yCurrent >= yStart) {
+
+            // LEFT-BOTTOM
+            delX *= -1;
+
+            if (delX > mSwipeOption.getSwipeVerticalThreshold()
+                    && delY <= mSwipeOption.getSwipeHorizontalThreshold()) {
+                bindSwipingDirection(SwipeDirection.LEFT);
+
+            } else if (delX <= mSwipeOption.getSwipeVerticalThreshold()
+                    && delY > mSwipeOption.getSwipeHorizontalThreshold()) {
+                bindSwipeIn(getResolver(), SwipeDirection.BOTTOM);
+
+            } else {
+                bindSwipingDirection(SwipeDirection.LEFT_BOTTOM);
+            }
+
+        } else if (xCurrent <= xStart && yCurrent < yStart) {
+
+            // LEFT-TOP
+            delX *= -1;
+            delY *= -1;
+
+            if (delX > mSwipeOption.getSwipeVerticalThreshold()
+                    && delY <= mSwipeOption.getSwipeHorizontalThreshold()) {
+                bindSwipingDirection(SwipeDirection.LEFT);
+
+            } else if (delX <= mSwipeOption.getSwipeVerticalThreshold()
+                    && delY > mSwipeOption.getSwipeHorizontalThreshold()) {
+                bindSwipingDirection(SwipeDirection.TOP);
+
+            } else {
+                bindSwipingDirection(SwipeDirection.LEFT_TOP);
+            }
+        }
     }
 
     /**

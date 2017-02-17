@@ -98,7 +98,7 @@ public class SwipeViewBuilder {
 
     public SwipeViewBuilder setSwipeHorizontalThreshold(int threshold) {
         if (threshold >= 0) {
-            mSwipePlaceHolderView.setHeightSwipeDistFactor(threshold);
+            mSwipePlaceHolderView.setSwipeHorizontalThreshold(threshold);
         }
         return this;
     }
