@@ -1,7 +1,5 @@
 package com.mindorks.placeholderview;
 
-import android.view.View;
-
 /**
  * Created by janisharali on 26/08/16.
  */
@@ -95,6 +93,20 @@ public class SwipeViewBuilder {
 
     public SwipeViewBuilder setIsUndoEnabled(boolean enabled) {
         mSwipePlaceHolderView.setIsUndoEnabled(enabled);
+        return this;
+    }
+
+    public SwipeViewBuilder setSwipeHorizontalThreshold(int threshold) {
+        if (threshold >= 0) {
+            mSwipePlaceHolderView.setHeightSwipeDistFactor(threshold);
+        }
+        return this;
+    }
+
+    public SwipeViewBuilder setSwipeVerticalThreshold(int threshold) {
+        if (threshold >= 0) {
+            mSwipePlaceHolderView.setSwipeVerticalThreshold(threshold);
+        }
         return this;
     }
 }

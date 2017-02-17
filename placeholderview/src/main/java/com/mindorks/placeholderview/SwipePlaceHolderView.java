@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+
 import com.mindorks.placeholderview.listeners.ItemRemovedListener;
 
 import java.util.ArrayList;
@@ -175,6 +176,14 @@ public class SwipePlaceHolderView extends FrameLayout implements
      */
     protected void setHeightSwipeDistFactor(float factor) {
         mSwipeOption.setHeightSwipeDistFactor(factor);
+    }
+
+    protected void setSwipeHorizontalThreshold(int threshold) {
+        mSwipeOption.setSwipeHorizontalThreshold(threshold);
+    }
+
+    protected void setSwipeVerticalThreshold(int threshold) {
+        mSwipeOption.setSwipeVerticalThreshold(threshold);
     }
 
     /**
@@ -460,6 +469,57 @@ public class SwipePlaceHolderView extends FrameLayout implements
 
         float distXMovedAbs = distXMoved > 0 ? distXMoved : -distXMoved;
         float distYMovedAbs = distYMoved > 0 ? distYMoved : -distYMoved;
+
+        if (distXMoved >= 0 && distYMoved >= 0) {
+            // RIGHT-BOTTOM
+            if (distXMovedAbs > mSwipeOption.getSwipeHorizontalThreshold()
+                    && distYMovedAbs <= mSwipeOption.getSwipeVerticalThreshold()) {
+                swipeViewBinder.bindSwipingDirection(SwipeDirection.RIGHT);
+
+            } else if (distXMovedAbs <= mSwipeOption.getSwipeHorizontalThreshold()
+                    && distYMovedAbs > mSwipeOption.getSwipeVerticalThreshold()) {
+                swipeViewBinder.bindSwipingDirection(SwipeDirection.BOTTOM);
+            } else {
+                swipeViewBinder.bindSwipingDirection(SwipeDirection.RIGHT_BOTTOM);
+            }
+        } else if (distXMoved > 0 && distYMoved < 0) {
+            // RIGHT-TOP
+            if (distXMovedAbs > mSwipeOption.getSwipeHorizontalThreshold()
+                    && distYMovedAbs <= mSwipeOption.getSwipeVerticalThreshold()) {
+                swipeViewBinder.bindSwipingDirection(SwipeDirection.RIGHT);
+
+            } else if (distXMovedAbs <= mSwipeOption.getSwipeHorizontalThreshold()
+                    && distYMovedAbs > mSwipeOption.getSwipeVerticalThreshold()) {
+                swipeViewBinder.bindSwipingDirection(SwipeDirection.TOP);
+            } else {
+                swipeViewBinder.bindSwipingDirection(SwipeDirection.RIGHT_TOP);
+            }
+
+        } else if (distXMoved < 0 && distYMoved < 0) {
+            // LEFT-TOP
+            if (distXMovedAbs > mSwipeOption.getSwipeHorizontalThreshold()
+                    && distYMovedAbs <= mSwipeOption.getSwipeVerticalThreshold()) {
+                swipeViewBinder.bindSwipingDirection(SwipeDirection.LEFT);
+
+            } else if (distXMovedAbs <= mSwipeOption.getSwipeHorizontalThreshold()
+                    && distYMovedAbs > mSwipeOption.getSwipeVerticalThreshold()) {
+                swipeViewBinder.bindSwipingDirection(SwipeDirection.TOP);
+            } else {
+                swipeViewBinder.bindSwipingDirection(SwipeDirection.LEFT_TOP);
+            }
+        } else if (distXMoved < 0 && distYMoved > 0) {
+            // LEFT-BOTTOM
+            if (distXMovedAbs > mSwipeOption.getSwipeHorizontalThreshold()
+                    && distYMovedAbs <= mSwipeOption.getSwipeVerticalThreshold()) {
+                swipeViewBinder.bindSwipingDirection(SwipeDirection.LEFT);
+
+            } else if (distXMovedAbs <= mSwipeOption.getSwipeHorizontalThreshold()
+                    && distYMovedAbs > mSwipeOption.getSwipeVerticalThreshold()) {
+                swipeViewBinder.bindSwipingDirection(SwipeDirection.BOTTOM);
+            } else {
+                swipeViewBinder.bindSwipingDirection(SwipeDirection.LEFT_BOTTOM);
+            }
+        }
 
         if(mSwipeDecor.isAnimateScale() && mSwipeViewBinderList.contains(swipeViewBinder)
                 && distXMovedAbs <= finalXDist && distYMovedAbs <= finalYDist){
@@ -879,13 +939,17 @@ public class SwipePlaceHolderView extends FrameLayout implements
         private AtomicBoolean mIsViewToRestoreOnLock;
         private AtomicBoolean mIsViewToRestoreOnTouchLock;
         private AtomicBoolean mIsTouchSwipeLocked;
+        private int mSwipeHorizontalThreshold;
+        private int mSwipeVerticalThreshold;
 
-        public SwipeOption() {
+        protected SwipeOption() {
             mIsViewLocked = new AtomicBoolean(false);
             mIsPutBackActive = new AtomicBoolean(false);
             mIsViewToRestoreOnLock = new AtomicBoolean(true);
             mIsViewToRestoreOnTouchLock = new AtomicBoolean(true);
             mIsTouchSwipeLocked = new AtomicBoolean(false);
+            mSwipeHorizontalThreshold = Utils.dpToPx(5);
+            mSwipeVerticalThreshold = Utils.dpToPx(5);
         }
 
         protected boolean getIsViewLocked() {
@@ -930,20 +994,36 @@ public class SwipePlaceHolderView extends FrameLayout implements
             mIsTouchSwipeLocked.set(locked);
         }
 
-        public float getWidthSwipeDistFactor() {
+        protected float getWidthSwipeDistFactor() {
             return mWidthSwipeDistFactor;
         }
 
-        public void setWidthSwipeDistFactor(float widthSwipeDistFactor) {
+        protected void setWidthSwipeDistFactor(float widthSwipeDistFactor) {
             this.mWidthSwipeDistFactor = widthSwipeDistFactor;
         }
 
-        public float getHeightSwipeDistFactor() {
+        protected float getHeightSwipeDistFactor() {
             return mHeightSwipeDistFactor;
         }
 
-        public void setHeightSwipeDistFactor(float heightSwipeDistFactor) {
+        protected void setHeightSwipeDistFactor(float heightSwipeDistFactor) {
             this.mHeightSwipeDistFactor = heightSwipeDistFactor;
+        }
+
+        protected int getSwipeHorizontalThreshold() {
+            return mSwipeHorizontalThreshold;
+        }
+
+        protected void setSwipeHorizontalThreshold(int threshold) {
+            this.mSwipeHorizontalThreshold = threshold;
+        }
+
+        protected int getSwipeVerticalThreshold() {
+            return mSwipeVerticalThreshold;
+        }
+
+        protected void setSwipeVerticalThreshold(int threshold) {
+            this.mSwipeVerticalThreshold = threshold;
         }
     }
 }

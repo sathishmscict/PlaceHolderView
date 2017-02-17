@@ -8,9 +8,9 @@ import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewPropertyAnimator;
-import android.view.animation.*;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
-
 
 import com.mindorks.placeholderview.annotations.swipe.SwipeCancelState;
 import com.mindorks.placeholderview.annotations.swipe.SwipeIn;
@@ -18,11 +18,11 @@ import com.mindorks.placeholderview.annotations.swipe.SwipeInState;
 import com.mindorks.placeholderview.annotations.swipe.SwipeOut;
 import com.mindorks.placeholderview.annotations.swipe.SwipeOutState;
 import com.mindorks.placeholderview.annotations.swipe.SwipeView;
+import com.mindorks.placeholderview.annotations.swipe.SwipingDirection;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static android.view.View.VISIBLE;
 
@@ -117,13 +117,20 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
      *
      * @param resolver
      */
-    private void bindSwipeIn(final T resolver){
+    private void bindSwipeIn(final T resolver, SwipeDirection direction) {
         for(final Method method : resolver.getClass().getDeclaredMethods()) {
             SwipeIn annotation = method.getAnnotation(SwipeIn.class);
             if(annotation != null) {
                 try {
-                    method.setAccessible(true);
-                    method.invoke(resolver);
+                    Class<?>[] paramClass = method.getParameterTypes();
+                    if (paramClass == null || paramClass.length == 0 || paramClass[0] != SwipeDirection.class) {
+                        method.setAccessible(true);
+                        method.invoke(resolver);
+                    } else {
+                        method.setAccessible(true);
+                        method.invoke(resolver, direction);
+                    }
+
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 } catch (InvocationTargetException e) {
@@ -137,13 +144,20 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
      *
      * @param resolver
      */
-    private void bindSwipeOut(final T resolver){
+    private void bindSwipeOut(final T resolver, SwipeDirection direction) {
         for(final Method method : resolver.getClass().getDeclaredMethods()) {
             SwipeOut annotation = method.getAnnotation(SwipeOut.class);
             if(annotation != null) {
                 try {
-                    method.setAccessible(true);
-                    method.invoke(resolver);
+                    Class<?>[] paramClass = method.getParameterTypes();
+                    if (paramClass == null || paramClass.length == 0 || paramClass[0] != SwipeDirection.class) {
+                        method.setAccessible(true);
+                        method.invoke(resolver);
+                    } else {
+                        method.setAccessible(true);
+                        method.invoke(resolver, direction);
+                    }
+
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 } catch (InvocationTargetException e) {
@@ -210,6 +224,26 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
         }
     }
 
+
+    protected void bindSwipingDirection(SwipeDirection direction) {
+        for (final Method method : getResolver().getClass().getDeclaredMethods()) {
+            SwipingDirection annotation = method.getAnnotation(SwipingDirection.class);
+            if (annotation != null) {
+                Class<?>[] paramClass = method.getParameterTypes();
+                if (paramClass != null && paramClass.length > 0 && paramClass[0] == SwipeDirection.class) {
+                    try {
+                        method.setAccessible(true);
+                        method.invoke(getResolver(), direction);
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
     /**
      *
      */
@@ -221,7 +255,7 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
     /**
      *
      */
-    private void serAnimatorListener(){
+    private void setAnimatorListener() {
         mViewRemoveAnimatorListener = new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {}
@@ -288,7 +322,7 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
      * @param view
      */
     private void setDefaultTouchListener(final V view){
-        serAnimatorListener();
+        setAnimatorListener();
         final DisplayMetrics displayMetrics = view.getContext().getResources().getDisplayMetrics();
 
         FrameLayout.LayoutParams layoutParamsOriginal = (FrameLayout.LayoutParams) view.getLayoutParams();
@@ -360,22 +394,93 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
                                 float transX = displayMetrics.widthPixels;
                                 float transY = displayMetrics.heightPixels;
 
+                                float delX = pointerCurrentPoint.x - pointerStartingPoint.x;
+                                float delY = pointerCurrentPoint.y - pointerStartingPoint.y;
+
                                 if (pointerCurrentPoint.x >= pointerStartingPoint.x
                                         && pointerCurrentPoint.y >= pointerStartingPoint.y) {
-                                    bindSwipeIn(getResolver());
+
+                                    // RIGHT-BOTTOM
+
+                                    if (delX > mSwipeOption.getSwipeVerticalThreshold()
+                                            && delY <= mSwipeOption.getSwipeHorizontalThreshold()) {
+                                        transY = v.getTranslationY();
+                                        bindSwipeIn(getResolver(), SwipeDirection.RIGHT);
+
+                                    } else if (delX <= mSwipeOption.getSwipeVerticalThreshold()
+                                            && delY > mSwipeOption.getSwipeHorizontalThreshold()) {
+                                        transX = v.getTranslationX();
+                                        bindSwipeIn(getResolver(), SwipeDirection.BOTTOM);
+
+                                    } else {
+                                        bindSwipeIn(getResolver(), SwipeDirection.RIGHT_BOTTOM);
+                                    }
+
                                 } else if (pointerCurrentPoint.x > pointerStartingPoint.x
                                         && pointerCurrentPoint.y < pointerStartingPoint.y) {
+
+                                    // RIGHT-TOP
                                     transY = -v.getHeight();
-                                    bindSwipeIn(getResolver());
+                                    delY *= -1;
+
+                                    if (delX > mSwipeOption.getSwipeVerticalThreshold()
+                                            && delY <= mSwipeOption.getSwipeHorizontalThreshold()) {
+                                        transY = v.getTranslationY();
+                                        bindSwipeIn(getResolver(), SwipeDirection.RIGHT);
+
+                                    } else if (delX <= mSwipeOption.getSwipeVerticalThreshold()
+                                            && delY > mSwipeOption.getSwipeHorizontalThreshold()) {
+                                        transX = v.getTranslationX();
+                                        bindSwipeOut(getResolver(), SwipeDirection.TOP);
+
+                                    } else {
+                                        bindSwipeOut(getResolver(), SwipeDirection.RIGHT_TOP);
+                                    }
+
                                 } else if (pointerCurrentPoint.x < pointerStartingPoint.x
                                         && pointerCurrentPoint.y >= pointerStartingPoint.y) {
+
+                                    // LEFT-BOTTOM
                                     transX = -v.getWidth();
-                                    bindSwipeOut(getResolver());
+                                    delX *= -1;
+
+                                    if (delX > mSwipeOption.getSwipeVerticalThreshold()
+                                            && delY <= mSwipeOption.getSwipeHorizontalThreshold()) {
+                                        transY = v.getTranslationY();
+                                        bindSwipeOut(getResolver(), SwipeDirection.LEFT);
+
+                                    } else if (delX <= mSwipeOption.getSwipeVerticalThreshold()
+                                            && delY > mSwipeOption.getSwipeHorizontalThreshold()) {
+                                        transX = v.getTranslationX();
+                                        bindSwipeIn(getResolver(), SwipeDirection.BOTTOM);
+
+                                    } else {
+                                        bindSwipeOut(getResolver(), SwipeDirection.LEFT_BOTTOM);
+                                    }
+
                                 } else if (pointerCurrentPoint.x <= pointerStartingPoint.x
                                         && pointerCurrentPoint.y < pointerStartingPoint.y) {
+
+                                    // LEFT-TOP
                                     transY = -v.getHeight();
                                     transX = -v.getWidth();
-                                    bindSwipeOut(getResolver());
+
+                                    delX *= -1;
+                                    delY *= -1;
+
+                                    if (delX > mSwipeOption.getSwipeVerticalThreshold()
+                                            && delY <= mSwipeOption.getSwipeHorizontalThreshold()) {
+                                        transY = v.getTranslationY();
+                                        bindSwipeOut(getResolver(), SwipeDirection.LEFT);
+
+                                    } else if (delX <= mSwipeOption.getSwipeVerticalThreshold()
+                                            && delY > mSwipeOption.getSwipeHorizontalThreshold()) {
+                                        transX = v.getTranslationX();
+                                        bindSwipeOut(getResolver(), SwipeDirection.TOP);
+
+                                    } else {
+                                        bindSwipeOut(getResolver(), SwipeDirection.LEFT_TOP);
+                                    }
                                 }
 
                                 view.animate()
@@ -418,7 +523,7 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
      * @param view
      */
     private void setHorizontalTouchListener(final V view){
-        serAnimatorListener();
+        setAnimatorListener();
         final DisplayMetrics displayMetrics = view.getContext().getResources().getDisplayMetrics();
 
         FrameLayout.LayoutParams layoutParamsOriginal = (FrameLayout.LayoutParams) view.getLayoutParams();
@@ -482,9 +587,9 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
                                 float transX = displayMetrics.widthPixels;
                                 if (x < xStart) {
                                     transX = -v.getWidth();
-                                    bindSwipeOut(getResolver());
+                                    bindSwipeOut(getResolver(), SwipeDirection.LEFT);
                                 } else {
-                                    bindSwipeIn(getResolver());
+                                    bindSwipeIn(getResolver(), SwipeDirection.RIGHT);
                                 }
 
                                 view.animate()
@@ -523,7 +628,7 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
      * @param view
      */
     private void setVerticalTouchListener(final V view){
-        serAnimatorListener();
+        setAnimatorListener();
         final DisplayMetrics displayMetrics = view.getContext().getResources().getDisplayMetrics();
 
         FrameLayout.LayoutParams layoutParamsOriginal = (FrameLayout.LayoutParams) view.getLayoutParams();
@@ -587,9 +692,9 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
                                 float transY = displayMetrics.heightPixels;
                                 if (y < yStart) {
                                     transY = -v.getHeight();
-                                    bindSwipeOut(getResolver());
+                                    bindSwipeOut(getResolver(), SwipeDirection.TOP);
                                 } else {
-                                    bindSwipeIn(getResolver());
+                                    bindSwipeIn(getResolver(), SwipeDirection.BOTTOM);
                                 }
                                 view.animate()
                                         .translationY(transY)
@@ -718,10 +823,10 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
             switch (mSwipeType){
                 case SwipePlaceHolderView.SWIPE_TYPE_DEFAULT:
                     if(isSwipeIn){
-                        bindSwipeIn(getResolver());
+                        bindSwipeIn(getResolver(), SwipeDirection.RIGHT_BOTTOM);
                         animator.rotation(-mSwipeDecor.getSwipeRotationAngle());
                     }else{
-                        bindSwipeOut(getResolver());
+                        bindSwipeOut(getResolver(), SwipeDirection.LEFT_BOTTOM);
                         transX = -mLayoutView.getWidth();
                         animator.rotation(mSwipeDecor.getSwipeRotationAngle());
                     }
@@ -729,18 +834,18 @@ public class SwipeViewBinder<T, V extends FrameLayout> extends ViewBinder<T, V>{
                     break;
                 case SwipePlaceHolderView.SWIPE_TYPE_HORIZONTAL:
                     if(isSwipeIn){
-                        bindSwipeIn(getResolver());
+                        bindSwipeIn(getResolver(), SwipeDirection.RIGHT);
                     }else{
-                        bindSwipeOut(getResolver());
+                        bindSwipeOut(getResolver(), SwipeDirection.LEFT);
                         transX = -mLayoutView.getWidth();
                     }
                     animator.translationX(transX);
                     break;
                 case SwipePlaceHolderView.SWIPE_TYPE_VERTICAL:
                     if(isSwipeIn){
-                        bindSwipeIn(getResolver());
+                        bindSwipeIn(getResolver(), SwipeDirection.BOTTOM);
                     }else{
-                        bindSwipeOut(getResolver());
+                        bindSwipeOut(getResolver(), SwipeDirection.TOP);
                         transY = -mLayoutView.getHeight();
                     }
                     animator.translationY(transY);

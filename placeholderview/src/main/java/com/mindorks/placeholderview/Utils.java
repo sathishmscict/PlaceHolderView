@@ -35,13 +35,13 @@ public class Utils {
         return Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP;
     }
 
-    /**
-     *
-     * @param context
-     * @param dp
-     * @return
-     */
-    public static int dpToPx(Context context,int dp) {
-        return (int) (dp * context.getResources().getDisplayMetrics().density);
+    protected static float pxToDp(float px) {
+        float densityDpi = Resources.getSystem().getDisplayMetrics().densityDpi;
+        return px / (densityDpi / 160f);
+    }
+
+    protected static int dpToPx(float dp) {
+        float density = Resources.getSystem().getDisplayMetrics().density;
+        return Math.round(dp * density);
     }
 }
